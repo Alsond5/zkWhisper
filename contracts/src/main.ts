@@ -7,7 +7,11 @@ import {
   MerkleMap,
   Poseidon,
   Bool,
+  Encryption,
+  CircuitString,
+  Signature
 } from 'o1js';
+import { Prover, Checker, MessageDetails } from "./Prover.js"
 
 function powermod(base: bigint, exp: bigint, p: bigint): Field {
     var result = 1n;
@@ -26,7 +30,6 @@ const Local = Mina.LocalBlockchain({ proofsEnabled: useProof });
 Mina.setActiveInstance(Local);
 const { privateKey: deployerKey, publicKey: deployerAccount } = Local.testAccounts[0];
 const { privateKey: senderKey, publicKey: senderAccount } = Local.testAccounts[1];
-
 // ----------------------------------------------------
 // Create a public/private key pair. The public key is your address and where you deploy the zkApp to
 const zkAppPrivateKey = PrivateKey.random();
@@ -71,7 +74,7 @@ txn = await Mina.transaction(senderAccount, () => {
   zkAppInstance.keyAgreement(witness, pkb, common_puk);
 });
 await txn.prove();
-await txn.sign([senderKey]).send();
+const pendingTxn = await txn.sign([senderKey]).send();
 
 console.log("common private key:", common_pk.toBase58());
 console.log("common public key:", common_puk.toBase58());
@@ -95,3 +98,37 @@ await txn.prove();
 await txn.sign([senderKey]).send();
 
 console.log("Are publickeys equal:", check?.toBoolean());
+
+const mhh = zkAppInstance.messageHistoryHash.get();
+const participants = zkAppInstance.participants.get();
+
+const checker = new Checker(mhh, participants);
+
+let proof = await Prover.baseCase(checker);
+
+const messages: MessageDetails[] = []
+const examples = [
+  "hello",
+  "world",
+  "how are you",
+  "welcome",
+  "to mina blockchain"
+]
+
+for (const message of examples) {
+  const plain = CircuitString.fromString(message).toFields();
+  const cipher = Encryption.encrypt(plain, common_puk);
+
+  const hashedCipher = Poseidon.hash(cipher.cipherText);
+  const sig = Signature.create(senderKey, cipher.publicKey.toFields().concat(hashedCipher));
+
+  const messageDetails = new MessageDetails(hashedCipher, cipher.publicKey, sig);
+
+  messages.push(messageDetails);
+}
+
+for (const message of messages) {
+  proof = await Prover.processMessage(checker, proof, message);
+}
+
+console.log(proof.publicOutput);

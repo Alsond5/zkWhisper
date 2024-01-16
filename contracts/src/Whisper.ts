@@ -1,10 +1,14 @@
-import { Field, SmartContract, state, State, method, PublicKey, Encryption, MerkleMapWitness, Poseidon, createForeignCurve, Crypto, createEcdsa, CircuitString, Bool } from 'o1js';
+import { Field, SmartContract, state, State, method, PublicKey, Encryption, MerkleMapWitness, Poseidon, createForeignCurve, Crypto, createEcdsa, CircuitString, Bool, ZkProgram, Provable } from 'o1js';
+import { Prover } from "./Prover.js";
 
 export const g = 5n;
 
 class Secp256k1 extends createForeignCurve(Crypto.CurveParams.Secp256k1) {}
-
 class Ecdsa extends createEcdsa(Secp256k1) {}
+
+const { verificationKey } = await Prover.compile();
+
+class Proof extends ZkProgram.Proof(Prover) {}
 
 export class Whisper extends SmartContract {
   events = {
