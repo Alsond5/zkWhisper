@@ -6,7 +6,7 @@ export const g = 5n;
 class Secp256k1 extends createForeignCurve(Crypto.CurveParams.Secp256k1) {}
 class Ecdsa extends createEcdsa(Secp256k1) {}
 
-const { verificationKey } = await Prover.compile();
+export const { verificationKey } = await Prover.compile();
 
 class Proof extends ZkProgram.Proof(Prover) {}
 
@@ -49,5 +49,22 @@ export class Whisper extends SmartContract {
     const puk = this.publicKey.getAndRequireEquals();
 
     return puk.equals(publicKey);
+  }
+
+  @method verifyMessages(proof: Proof) {
+    proof.verify();
+
+    const messageHistoryHash = this.messageHistoryHash.getAndRequireEquals();
+    const participants = this.participants.getAndRequireEquals();
+
+    const initialHash = proof.publicInput.messageHistory;
+    messageHistoryHash.assertEquals(initialHash);
+    
+    const root = proof.publicInput.participants;
+    participants.assertEquals(root);
+
+    const newMessageHistoryHash = proof.publicOutput.newMessageHistory;
+    
+    this.messageHistoryHash.set(newMessageHistoryHash);
   }
 }

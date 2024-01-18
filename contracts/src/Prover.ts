@@ -31,38 +31,53 @@ export class MessageDetails extends Struct ({
     }
 }
 
+export class Outputs extends Struct({
+    hashedMessage: Field,
+    newMessageHistory: Field
+}) {
+    constructor(hashedMessage: Field, newMessageHistory: Field) {
+        super({ hashedMessage, newMessageHistory });
+
+        this.hashedMessage = hashedMessage;
+        this.newMessageHistory = newMessageHistory;
+    }
+}
+
 export const Prover = ZkProgram({
     name: "message-prover",
     publicInput: Checker,
-    publicOutput: Field,
+    publicOutput: Outputs,
     
     methods: {
         baseCase: {
             privateInputs: [],
 
             method(checker: Checker) {
-                return checker.messageHistory;
+                return new Outputs(Field(0), checker.messageHistory);
             }
         },
 
         processMessage: {
-            privateInputs: [SelfProof<Checker, Field>, MessageDetails],
+            privateInputs: [SelfProof<Checker, Outputs>, MessageDetails, PublicKey, MerkleMapWitness],
 
-            method(checker: Checker, earlierProof: SelfProof<Checker, Field>, md: MessageDetails) {
+            method(checker: Checker, earlierProof: SelfProof<Checker, Outputs>, md: MessageDetails, sender: PublicKey, witness: MerkleMapWitness) {
                 earlierProof.verify();
 
                 const verifyChecker = earlierProof.publicInput;
                 Checker.requireEquals(checker, verifyChecker);
 
-                const messageHistoryHash = earlierProof.publicOutput;
+                md.signature.verify(sender, md.publicKey.toFields().concat(md.cipherText));
+                
+                const [root, key] = witness.computeRootAndKey(Field(2n));
+                const hashedSender = Poseidon.hash(sender.toFields());
+                
+                key.assertEquals(hashedSender);
+                checker.participants.assertEquals(root);
 
-                // md.signature.verify(sender, md.publicKey.toFields().concat(md.cipherText));
-
-                // add extra controls
-
+                const messageHistoryHash = earlierProof.publicOutput.newMessageHistory;
                 const calculatedNewHash = Poseidon.hash([messageHistoryHash, md.cipherText]);
 
-                return calculatedNewHash;
+                return new Outputs(md.cipherText, calculatedNewHash);
             }
         }
     }

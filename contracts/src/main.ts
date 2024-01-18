@@ -1,4 +1,4 @@
-import { Whisper, g } from './Whisper.js';
+import { Whisper, g, verificationKey } from './Whisper.js';
 import {
   Field,
   Mina,
@@ -9,7 +9,8 @@ import {
   Bool,
   Encryption,
   CircuitString,
-  Signature
+  Signature,
+  verify
 } from 'o1js';
 import { Prover, Checker, MessageDetails } from "./Prover.js"
 
@@ -128,7 +129,15 @@ for (const message of examples) {
 }
 
 for (const message of messages) {
-  proof = await Prover.processMessage(checker, proof, message);
+  proof = await Prover.processMessage(checker, proof, message, senderAccount, witness);
+  
+  // proof will be verified on the receiving side of the message
+  const ok = await verify(proof.toJSON(), verificationKey);
+  
+  if (!ok) {
+    console.log("Proof could not be verified");
+    break;
+  }
 }
 
 console.log(proof.publicOutput);
