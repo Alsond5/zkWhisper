@@ -1,133 +1,78 @@
-
-<script>
-  import heroMinaLogo from '$lib/assets/hero-mina-logo.svg'
-  import arrowRightSmall from '$lib/assets/arrow-right-small.svg'
-  import GradientBG from './GradientBG.svelte'
+<script lang="ts">
   import { onMount } from 'svelte'
-  import { isReady, Mina, PublicKey } from 'o1js'
+  import { Mina, PublicKey, PrivateKey } from 'o1js'
+  import { setContext } from 'svelte';
+	import { writable } from 'svelte/store';
+  import workerClient from "$lib/workerClient";
+
+  const state = writable();
+  $: state.set({
+    client: null as null | workerClient
+  })
+
+  setContext("state", state);
+
+  async function timeout(seconds: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, seconds * 1000);
+    });
+  }
 
   onMount(async () => {
-    const { Add } = await import('../../../contracts/build/src/')
+    console.log('Loading web worker...');
 
-    await isReady
-    // Update this to use the address (public key) for your zkApp account.
-    // To try it out, you can try this address for an example "Add" smart contract that we've deployed to
-    // Berkeley Testnet B62qkwohsqTBPsvhYE8cPZSpzJMgoKn4i1LQRuBAtVXWpaT4dgH6WoA .
-    const zkAppAddress = ''
-    // This should be removed once the zkAppAddress is updated.
-    if (!zkAppAddress) {
-      console.error(
-        'The following error is caused because the zkAppAddress has an empty string as the public key. Update the zkAppAddress with the public key for your zkApp account, or try this address for an example "Add" smart contract that we deployed to Berkeley Testnet: B62qkwohsqTBPsvhYE8cPZSpzJMgoKn4i1LQRuBAtVXWpaT4dgH6WoA',
-      )
-    }
-    //const zkApp = new Add(PublicKey.fromBase58(zkAppAddress))
+    const zkappWorkerClient = new workerClient();
+    await timeout(5);
+
+    console.log('Done loading web worker');
+
+
+    const useProof = false;
+    const Local = Mina.LocalBlockchain({ proofsEnabled: useProof });
+    Mina.setActiveInstance(Local);
+    const { privateKey: deployerKey, publicKey: deployerAccount } = Local.testAccounts[0];
+    const { privateKey: senderKey, publicKey: senderAccount } = Local.testAccounts[1];
+    // ----------------------------------------------------
+    // Create a public/private key pair. The public key is your address and where you deploy the zkApp to
+    const zkAppPrivateKey = PrivateKey.random();
+    const zkAppAddress = zkAppPrivateKey.toPublicKey();
+
+    console.log("initialize");
+
+    await zkappWorkerClient.loadContract();
+
+    console.log("compile");
+
+    await zkappWorkerClient.compileContract();
+
+    console.log("get pka");
+
+    await zkappWorkerClient.initZkappInstance(zkAppAddress);
+
+    const pka = zkappWorkerClient.getPka();
+
+    console.log(pka)
   })
 </script>
-
-<style global>
-  @import '../styles/Home.module.css';
-</style>
 
 <svelte:head>
   <title>Mina zkApp UI</title>
 </svelte:head>
-<GradientBG>
-  <main class="main">
-    <div class="center">
-      <a
-        href="https://minaprotocol.com/"
-        target="_blank"
-        rel="noopener noreferrer">
-        <img
-          class="logo"
-          src={heroMinaLogo}
-          alt="Mina Logo"
-          width="191"
-          height="174"
-          priority />
-      </a>
-      <p class="tagline">
-        built with
-        <code class="code">o1js</code>
-      </p>
-    </div>
-    <p class="start">
-      Get started by editing
-      <code class="code">src/routes/+page.svelte</code>
-    </p>
-    <div class="grid">
-      <a
-        href="https://docs.minaprotocol.com/zkapps"
-        class="card"
-        target="_blank"
-        rel="noopener noreferrer">
-        <h2>
-          <span>DOCS</span>
-          <div>
-            <img
-              src={arrowRightSmall}
-              alt="Mina Logo"
-              width={16}
-              height={16}
-              priority />
-          </div>
-        </h2>
-        <p>Explore zkApps, how to build one, and in-depth references</p>
-      </a>
-      <a
-        href="https://docs.minaprotocol.com/zkapps/tutorials/hello-world"
-        class="card"
-        target="_blank"
-        rel="noopener noreferrer">
-        <h2>
-          <span>TUTORIALS</span>
-          <div>
-            <img
-              src={arrowRightSmall}
-              alt="Mina Logo"
-              width={16}
-              height={16}
-              priority />
-          </div>
-        </h2>
-        <p>Learn with step-by-step o1js tutorials</p>
-      </a>
-      <a
-        href="https://discord.gg/minaprotocol"
-        class="card"
-        target="_blank"
-        rel="noopener noreferrer">
-        <h2>
-          <span>QUESTIONS</span>
-          <div>
-            <img
-              src={arrowRightSmall}
-              alt="Mina Logo"
-              width={16}
-              height={16}
-              priority />
-          </div>
-        </h2>
-        <p>Ask questions on our Discord server</p>
-      </a>
-      <a
-        href="https://docs.minaprotocol.com/zkapps/how-to-deploy-a-zkapp"
-        class="card"
-        target="_blank"
-        rel="noopener noreferrer">
-        <h2>
-          <span>DEPLOY</span>
-          <div>
-            <img
-              src={arrowRightSmall}
-              alt="Mina Logo"
-              width={16}
-              height={16}
-              priority />
-          </div>
-        </h2>
-        <p>Deploy a zkApp to Berkeley Testnet</p>
-      </a>
-    </div>
-  </main>
-</GradientBG>
+
+<main class="w-full h-full flex flex-col items-center justify-center px-20" style="height: calc(100% - 5rem);"> 
+  <div class="text-center">
+    <h1 class="mb-5 text-2xl font-bold leading-none tracking-tight text-[#023047] md:text-3xl lg:text-5xl dark:text-white">Secure and private messaging with <span class="underline underline-offset-3 decoration-8 decoration-[#594AF1]">zk-whisper</span></h1>
+    <p class="text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Here is the most secret and secure way to exchange messages without trusting any system</p>
+  </div>
+  
+  <div class="mt-10 flex items-center justify-center">
+    <button type="button" class="inline-flex items-center px-7 py-2.5 text-sm font-medium text-center bg-white text-[#023047] font-bold border-2 border-blue-700 rounded-lg hover:text-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+      <span class="mt-1">Join an existing chat</span>
+    </button>
+    <button type="button" class="inline-flex items-center px-7 py-2.5 ml-5 text-sm border-2 border-blue-700 font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+      <span class="mt-1">Create a new chat</span>
+    </button>
+  </div>
+</main>
