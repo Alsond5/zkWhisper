@@ -8,7 +8,7 @@
   onMount(async () => {
     accounts = await window.mina.getAccounts();
 
-    if (accounts) {
+    if (accounts.length !== 0) {
       // Show first 6 and last 4 characters of user's Mina account.
       display = `${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`;
     }

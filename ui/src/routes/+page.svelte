@@ -71,8 +71,8 @@
     <button type="button" class="inline-flex items-center px-7 py-2.5 text-sm font-medium text-center bg-white text-[#023047] font-bold border-2 border-blue-700 rounded-lg hover:text-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
       <span class="mt-1">Join an existing chat</span>
     </button>
-    <button type="button" class="inline-flex items-center px-7 py-2.5 ml-5 text-sm border-2 border-blue-700 font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+    <a href="/create-room" class="inline-flex items-center px-7 py-2.5 ml-5 text-sm border-2 border-blue-700 font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
       <span class="mt-1">Create a new chat</span>
-    </button>
+    </a>
   </div>
 </main>

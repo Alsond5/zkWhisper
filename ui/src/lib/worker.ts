@@ -4,7 +4,7 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
 
-import { Whisper } from '../../../contracts/src/Whisper.js';
+import { Whisper } from '../../../contracts/build/src/Whisper.js';
 
 const state = {
   Whisper: null as null | typeof Whisper,

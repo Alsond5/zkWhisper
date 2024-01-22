@@ -74,10 +74,12 @@ export default class ZkappWorkerClient {
       //@ts-ignore
       crossOriginIsolated: true
     });
+
     this.promises = {};
     this.nextId = 0;
 
     this.worker.onmessage = (event: MessageEvent<ZkappWorkerReponse>) => {
+      console.log(event)
       this.promises[event.data.id].resolve(event.data.data);
       delete this.promises[event.data.id];
     };
