@@ -61,7 +61,7 @@
   <title>Mina zkApp UI</title>
 </svelte:head>
 
-<main class="w-full h-full flex flex-col items-center justify-center px-20" style="height: calc(100% - 5rem);"> 
+<main class="w-full h-full flex flex-col items-center justify-center px-20" style="height: calc(100% - 5rem);">
   <div class="text-center">
     <h1 class="mb-5 text-2xl font-bold leading-none tracking-tight text-[#023047] md:text-3xl lg:text-5xl dark:text-white">Secure and private messaging with <span class="underline underline-offset-3 decoration-8 decoration-[#594AF1]">zk-whisper</span></h1>
     <p class="text-lg font-normal text-gray-500 lg:text-xl dark:text-gray-400">Here is the most secret and secure way to exchange messages without trusting any system</p>
