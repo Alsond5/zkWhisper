@@ -4,7 +4,7 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 
 // ---------------------------------------------------------------------------------------
 
-import { Whisper } from '../../../contracts/build/src/Whisper.js';
+import type { Whisper } from '../../../contracts/src/Whisper';
 
 const state = {
   Whisper: null as null | typeof Whisper,
@@ -37,11 +37,11 @@ const functions = {
     const publicKey = PublicKey.fromBase58(args.publicKey58);
     state.zkapp = new state.Whisper!(publicKey);
   },
-  getPka: async (args: {}) => {
+  getNum: async (args: {}) => {
     const currentNum = await state.zkapp!.pka.get();
     return JSON.stringify(currentNum.toJSON());
   },
-  keyAgreementTransaction: async (args: {}) => {
+  createUpdateTransaction: async (args: {}) => {
     const transaction = await Mina.transaction(() => {
       // state.zkapp!.keyAgreement();
     });

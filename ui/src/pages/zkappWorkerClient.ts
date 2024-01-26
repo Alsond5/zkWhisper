@@ -4,7 +4,7 @@ import type {
   ZkappWorkerRequest,
   ZkappWorkerReponse,
   WorkerFunctions,
-} from './worker';
+} from './zkappWorker';
 
 export default class ZkappWorkerClient {
   // ---------------------------------------------------------------------------------------
@@ -38,13 +38,13 @@ export default class ZkappWorkerClient {
     });
   }
 
-  async getPka(): Promise<Field> {
-    const result = await this._call('getPka', {});
+  async getNum(): Promise<Field> {
+    const result = await this._call('getNum', {});
     return Field.fromJSON(JSON.parse(result as string));
   }
 
   createUpdateTransaction() {
-    return this._call('keyAgreementTransaction', {});
+    return this._call('createUpdateTransaction', {});
   }
 
   proveUpdateTransaction() {
@@ -67,19 +67,11 @@ export default class ZkappWorkerClient {
   nextId: number;
 
   constructor() {
-    this.worker = new Worker(new URL('./worker.ts', import.meta.url), {
-      type: 'module',
-      credentials: 'same-origin',
-      name: 'worker',
-      //@ts-ignore
-      crossOriginIsolated: true
-    });
-
+    this.worker = new Worker(new URL('./zkappWorker.ts', import.meta.url));
     this.promises = {};
     this.nextId = 0;
 
     this.worker.onmessage = (event: MessageEvent<ZkappWorkerReponse>) => {
-      console.log(event)
       this.promises[event.data.id].resolve(event.data.data);
       delete this.promises[event.data.id];
     };
