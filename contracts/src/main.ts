@@ -1,4 +1,4 @@
-import { Whisper, g, verificationKey } from './Whisper.js';
+import { Whisper, g, verificationKey, MyProof } from './Whisper.js';
 import {
   Field,
   Mina,
@@ -140,4 +140,4 @@ for (const message of messages) {
   }
 }
 
-console.log(proof.publicOutput);
+console.log(MyProof.fromJSON(proof.toJSON()));

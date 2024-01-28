@@ -8,7 +8,8 @@ class Ecdsa extends createEcdsa(Secp256k1) {}
 
 export const { verificationKey } = await Prover.compile();
 
-class Proof extends ZkProgram.Proof(Prover) {}
+await Prover.compile();
+export class MyProof extends ZkProgram.Proof(Prover) {}
 
 export class Whisper extends SmartContract {
   events = {
@@ -51,7 +52,7 @@ export class Whisper extends SmartContract {
     return puk.equals(publicKey);
   }
 
-  @method verifyMessages(proof: Proof) {
+  @method verifyMessages(proof: MyProof) {
     proof.verify();
 
     const messageHistoryHash = this.messageHistoryHash.getAndRequireEquals();

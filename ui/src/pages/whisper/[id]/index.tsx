@@ -1,11 +1,43 @@
-import { FormEvent, useEffect, useState } from "react"
-import Image from 'next/image'
+import { FormEvent, useEffect, useState } from "react";
+import Image from 'next/image';
+import { io } from "socket.io-client";
+
+import { Prover, Checker, MessageDetails, Outputs } from "../../../../../contracts/build/src/Prover.js";
+import { MyProof } from "../../../../../contracts/build/src/Whisper.js";
+import { CircuitString, Encryption, Field, Poseidon, PrivateKey, Proof, PublicKey, SelfProof, Signature } from "o1js";
+
+const socket = io("http://localhost:3001");
+
+type JsonProof = {
+    publicInput: string[];
+    publicOutput: string[];
+    maxProofsVerified: 0 | 1 | 2;
+    proof: string;
+};
 
 export default function Whisper() {
     const [accounts, setAccounts] = useState([]);
     const [display, setDisplay] = useState("");
 
     const [messageInput, setMessageInput] = useState("");
+
+    const [proofState, setProofState] = useState(null as null | JsonProof);
+    const [checker, setChecker] = useState(new Checker(Field(0), Field(0)));
+
+    useEffect(() => {
+        const c = new Checker(Field(100), Field(100));
+        setChecker(c);
+
+        (async () => {
+            const p = await Prover.baseCase(c);
+
+            setProofState(p.toJSON());
+        })();
+
+        socket.on("message", (message) => {
+            console.log(message);
+        });
+    }, [socket]);
     
     useEffect(() => {
         (async () => {
@@ -31,7 +63,6 @@ export default function Whisper() {
             setDisplay(d);
 
             console.log(display)
-
         } catch (err) {
             // If the user has a wallet installed but has not created an account, an
             // exception will be thrown. Consider showing "not connected" in your UI.
@@ -40,7 +71,9 @@ export default function Whisper() {
     }
 
     async function send_message(event: FormEvent<HTMLFormElement>) {
-
+        if (proofState) {
+            socket.emit("message", proofState);
+        }
     }
 
     return (

@@ -5,9 +5,13 @@ type Transaction = Awaited<ReturnType<typeof Mina.transaction>>;
 // ---------------------------------------------------------------------------------------
 
 import type { Whisper } from '../../../contracts/src/Whisper';
+import { Prover, Checker, MessageDetails } from '../../../contracts/src/Prover';
 
 const state = {
   Whisper: null as null | typeof Whisper,
+  Prover: null as null | typeof Prover,
+  Checker: null as null | typeof Checker,
+  MessageDetails: null as null | typeof MessageDetails,
   zkapp: null as null | Whisper,
   transaction: null as null | Transaction,
 };
@@ -24,10 +28,18 @@ const functions = {
   },
   loadContract: async (args: {}) => {
     const { Whisper } = await import('../../../contracts/build/src/Whisper.js');
+    const { Prover, Checker, MessageDetails } = await import('../../../contracts/build/src/Prover.js');
+
     state.Whisper = Whisper;
+    state.Prover = Prover;
+    state.Checker = Checker;
+    state.MessageDetails = MessageDetails;
   },
   compileContract: async (args: {}) => {
     await state.Whisper!.compile();
+  },
+  baseCase: async (args: { checker: Checker }) => {
+    return await Prover.baseCase(args.checker);
   },
   fetchAccount: async (args: { publicKey58: string }) => {
     const publicKey = PublicKey.fromBase58(args.publicKey58);
